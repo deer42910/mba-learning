@@ -1,280 +1,584 @@
 <template>
-<div>
-  <el-dialog title="编辑章节" width="40%" :destroy-on-close="true" :visible.sync="updateVisible" :before-close="handleClose">
-    <el-form :model="form" :rules="rules" ref="ruleForm">
-      <el-row :gutter="10">
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <span class="search-title">
-                所属课程:
-                </span>
-                <div style="width:100%">
-                    <el-form-item prop="taskId" style="margin-bottom:0">
-                        <el-select :disabled="type == 0 ? true:false" clearable style="margin-top:10px" size="mini" v-model="form.taskId" placeholder="请选择">
-                            <el-option v-for="(item,index) in task" :key="index"
-                                :label="item.name"
-                                :value="item.id">
-                            </el-option>
-                        </el-select>
-                    </el-form-item>
-                </div>
-        </el-col>
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <span class="search-title">
-                章节名称:
-                </span>
-            <div style="width:100%">
-                <el-form-item prop="name" style="margin-bottom:0">
-                    <el-input v-model="form.name" size="mini" placeholder="请输入章节名称" autocomplete="off"></el-input>
-                </el-form-item>
-            </div>
-        </el-col>
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <span class="search-title">
-                视频:
-                </span>
-            <div style="width:100%">
-                <el-form-item prop="video" style="margin-bottom:0">
-                    <el-upload
-                        :file-list="fileList"
-                        ref="upload"
-                        :action="uploadVideoUrl()"
-                        accept="video/*"
-                        :multiple="false"
-                        :limit="1"
-                        :on-exceed="handleExceed"
-                        :on-success="handleAvatorSuccess"
-                        :on-remove="handleRemove">
-                        <el-button size="mini" type="primary">点击上传</el-button>
-                    </el-upload>
-                </el-form-item>
-            </div>
-        </el-col>
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <span class="search-title">
-                课件:
-                </span>
-            <div style="width:100%">
-                <el-form-item prop="courseware" style="margin-bottom:0">
-                    <el-upload
-                        :file-list="fileList1"
-                        ref="upload"
-                        :action="uploadFileUrl()"
-                        :multiple="false"
-                        :limit="1"
-                        :on-exceed="handleExceed"
-                        :on-success="handleFileSuccess"
-                        :on-remove="handleFileRemove">
-                        <el-button size="mini" type="primary">点击上传</el-button>
-                    </el-upload>
-                </el-form-item>
-            </div>
-        </el-col>
-        <el-col style="margin-top:30px" :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <span class="search-title">
-                备注:
-                </span>
-            <div style="width:100%">
-                <el-form-item prop="remark" style="margin-bottom:0">
-                    <el-input type="textarea" v-model="form.remark" size="mini" placeholder="请输入备注" autocomplete="off"></el-input>
-                </el-form-item>
-            </div>
-        </el-col>
-      </el-row>
-    </el-form>
-    <div slot="footer" class="dialog-footer">
-      <el-button size="mini" type="primary" @click="submit">确 定</el-button>
-      <el-button size="mini" @click="handleClose">取 消</el-button>
-    </div>
-  </el-dialog>
-</div>
+  <div>
+    <el-dialog
+      title="编辑章节"
+      width="40%"
+      :visible.sync="updateVisible"
+      :before-close="handleClose"
+      :destroy-on-close="true"
+    >
+      <el-form
+        :model="form"
+        :rules="rules"
+        ref="ruleForm"
+        label-position="right"
+        label-width="120px"
+        class="custom-form"
+        v-loading="loading"
+      >
+        <el-row :gutter="25">
+          <el-col :span="24">
+            <el-form-item label="所属课程:" prop="taskName">
+              <el-input
+                v-model="form.taskName"
+                size="small"
+                :disabled="true"
+                placeholder="请选择课程"
+                class="custom-input"
+              ></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="章节名称:" prop="name">
+              <el-input
+                v-model="form.name"
+                size="small"
+                placeholder="请输入章节名称"
+                clearable
+                class="custom-input"
+              ></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="视频:" prop="video">
+              <el-upload
+                :file-list="fileList"
+                ref="videoUpload"
+                :action="uploadVideoUrl()"
+                accept="video/mp4,video/avi,video/mov,video/wmv"
+                :multiple="false"
+                :limit="1"
+                :on-exceed="handleExceed"
+                :on-success="handleAvatorSuccess"
+                :on-remove="handleRemove"
+                :before-upload="beforeVideoUpload"
+                :on-progress="handleUploadProgress"
+              >
+                <el-button size="small" type="primary" class="upload-button">点击上传</el-button>
+                <div slot="tip" class="el-upload__tip">支持 MP4、AVI、MOV、WMV 格式，最大 50MB</div>
+              </el-upload>
+              <el-progress
+                v-if="videoUploading"
+                :percentage="uploadProgress"
+                :status="uploadProgress === 100 ? 'success' : ''"
+                style="margin-top: 10px;"
+              ></el-progress>
+              <div v-if="form.video" class="file-preview">
+                <video
+                  :src="$store.state.configure.HOST + form.video"
+                  controls
+                  style="max-width: 100%; max-height: 200px; margin-top: 10px;"
+                >
+                  您的浏览器不支持视频播放。
+                </video>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="课件:" prop="courseware">
+              <el-upload
+                :file-list="fileList1"
+                ref="coursewareUpload"
+                :action="uploadFileUrl()"
+                accept="application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                :multiple="false"
+                :limit="1"
+                :on-exceed="handleExceed"
+                :on-success="handleFileSuccess"
+                :on-remove="handleFileRemove"
+                :before-upload="beforeCoursewareUpload"
+                :on-progress="handleUploadProgress"
+              >
+                <el-button size="small" type="primary" class="upload-button">点击上传</el-button>
+                <div slot="tip" class="el-upload__tip">支持 PPT、PPTX 格式，最大 20MB</div>
+              </el-upload>
+              <el-progress
+                v-if="coursewareUploading"
+                :percentage="uploadProgress"
+                :status="uploadProgress === 100 ? 'success' : ''"
+                style="margin-top: 10px;"
+              ></el-progress>
+              <div v-if="form.courseware" class="file-preview">
+                <a
+                  :href="$store.state.configure.HOST + form.courseware"
+                  target="_blank"
+                  class="download-link"
+                >
+                  下载课件：{{ form.coursewareName }}
+                </a>
+              </div>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="备注:" prop="remark">
+              <el-input
+                type="textarea"
+                v-model="form.remark"
+                size="small"
+                placeholder="请输入备注"
+                :rows="4"
+                class="custom-textarea"
+              ></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="handleClose" class="cancel-button" :disabled="submitting">取消</el-button>
+        <el-button
+          size="small"
+          type="primary"
+          @click="submit"
+          class="submit-button"
+          :loading="submitting"
+          :disabled="submitting"
+        >
+          确定
+        </el-button>
+      </div>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
-  import {mixin} from "../../../minix";
-  import {editApeChapter,getApeChapterById,getApeTaskList,getApeTaskByTeacherId} from '../../../api/api'
-  export default {
-    mixins: [mixin],
-    data() {
-      return{
-        fileList: [],
-        fileList1: [],
-        formLabelWidth: '80px',
-        form: {
-          taskId: "",
-          taskName: "",
-          name: "",
-          videoName: "",
-          video: "",
-          coursewareName: "",
-          courseware: "",
-          remark: "",
-        },
-        rules: {
-          taskId: [
-            { required: true, message: '请输入课程id', trigger: 'blur' },
-          ],
-          name: [
-            { required: true, message: '请输入章节名称', trigger: 'blur' },
-          ],
-          video: [
-            { required: true, message: '请输入视频', trigger: 'blur' },
-          ],
-        },
-      }
+import { mixin } from "../../../minix";
+import { editApeChapter, getApeChapterById, getApeTaskList, getApeTaskByTeacherId } from '../../../api/api';
+
+export default {
+  mixins: [mixin],
+  props: {
+    updateVisible: {
+      type: Boolean,
+      default: false,
     },
-    props: ['updateVisible','updateId','taskId','type','flag'],
-    methods: {
-      handleAvatorSuccess(res) {
-        let _this = this;
-        if(res.code == 1000){
-            _this.$message({
-              type: 'success',
-              message: '上传成功!'
-            });
-            this.fileList.push({name:res.data,url:this.$store.state.configure.HOST + res.message})
-            this.form.video = res.message
-            this.form.videoName = res.data
-        }else{
-          _this.$notify.error({
-            title: '错误',
-            message: res.message
-          });
+    updateId: {
+      type: String,
+      default: '',
+    },
+    taskId: {
+      type: String,
+      default: '',
+    },
+    taskName: {
+      type: String,
+      default: '',
+    },
+    type: {
+      type: Number,
+      default: 1,
+    },
+    flag: {
+      type: Number,
+      default: 1,
+    },
+  },
+  data() {
+    return {
+      fileList: [],
+      fileList1: [],
+      task: [],
+      form: {
+        id: '',
+        taskId: '',
+        taskName: '',
+        name: '',
+        videoName: '',
+        video: '',
+        coursewareName: '',
+        courseware: '',
+        remark: '',
+      },
+      rules: {
+        taskId: [{ required: true, message: '课程ID不能为空', trigger: 'change' }],
+        name: [{ required: true, message: '请输入章节名称', trigger: 'blur' }],
+        video: [{ required: true, message: '请上传视频', trigger: 'change' }],
+      },
+      videoUploading: false,
+      coursewareUploading: false,
+      uploadProgress: 0,
+      submitting: false,
+      loading: false,
+    };
+  },
+  watch: {
+    updateId: {
+      immediate: true,
+      handler(newVal) {
+        console.log('updateId changed:', newVal);
+        if (newVal) {
+          this.fetchChapterData(newVal);
         }
       },
-      handleRemove(file, fileList) {
-        this.form.video = ""
-        this.fileList = []
-      },
-      handleFileSuccess(res) {
-        let _this = this;
-        if(res.code == 1000){
-            _this.$message({
-              type: 'success',
-              message: '上传成功!'
-            });
-            this.fileList1.push({name:res.data,url:this.$store.state.configure.HOST + res.message})
-            this.form.courseware = res.message
-            this.form.coursewareName = res.data
-        }else{
-          _this.$notify.error({
-            title: '错误',
-            message: res.message
-          });
+    },
+    updateVisible(newVal) {
+      console.log('updateVisible changed:', newVal);
+      if (newVal) {
+        if (this.taskId) {
+          this.form.taskId = this.taskId;
+          this.form.taskName = this.taskName || '未选择课程';
+          console.log('Form initialized with:', this.form);
         }
-      },
-      handleFileRemove(file, fileList) {
-        this.form.courseware = ""
-        this.fileList1 = []
-      },
-      getApeTaskList() {
-          getApeTaskList().then(res => {
-              if(res.code == 1000) {
-                this.task = res.data;
-              } else {
-                this.$notify.error({
-                  title: '错误',
-                  message: res.message
-                });
-              }
-          })
-      },
-      getApeTaskByTeacherId() {
-        getApeTaskByTeacherId().then(res => {
-              if(res.code == 1000) {
-                this.task = res.data;
-              } else {
-                this.$notify.error({
-                  title: '错误',
-                  message: res.message
-                });
-              }
-          })
-      },
-      submit() {
-        this.$refs["ruleForm"].validate((valid) => {
-          if (valid) {
-            editApeChapter(this.form).then(res => {
-              if(res.code == 1000) {
-                this.$notify.success({
-                  title: '成功',
-                  message: "保存成功"
-                });
-                this.handleClose();
-              } else {
-                this.$notify.error({
-                  title: '错误',
-                  message: res.message
-                });
-              }
-            })
-          } else {
-            return false;
-          }
-        });
-      },
-      handleClose() {
-        this.fileList = []
-        this.fileList1 = []
-        this.$emit("updateFalse")
-      },
-     
-    },
-    created() {
-     
-    },
-    mounted() {
-      if(this.flag == 2) {
-        this.getApeTaskByTeacherId()
       } else {
-        this.getApeTaskList()
+        this.resetForm();
       }
     },
-    watch: {
-      updateId(newVal) {
-        if(newVal) {
-          getApeChapterById({id:newVal}).then(res => {
-            if(res.code == 1000) {
-              this.form = res.data
-              this.fileList.push({name:this.form.videoName,url:this.$store.state.configure.HOST + this.form.video})
-              if (this.form.coursewareName) {
-                this.fileList1.push({name:this.form.coursewareName,url:this.$store.state.configure.HOST + this.form.courseware})
-              }
+  },
+  mounted() {
+    if (this.flag == 2) {
+      this.getApeTaskByTeacherId();
+    } else {
+      this.getApeTaskList();
+    }
+  },
+  methods: {
+    async fetchChapterData(id) {
+      this.loading = true;
+      try {
+        const res = await getApeChapterById({ id });
+        console.log('Fetched chapter data:', res);
+        if (res.code === 1000) {
+          this.form = {
+            id: res.data.id || '',
+            taskId: res.data.taskId || this.taskId || '',
+            taskName: res.data.taskName || this.taskName || '未选择课程',
+            name: res.data.name || '',
+            video: res.data.video || '',
+            videoName: res.data.videoName || '',
+            courseware: res.data.courseware || '',
+            coursewareName: res.data.coursewareName || '',
+            remark: res.data.remark || '',
+          };
+          console.log('Form updated with fetched data:', this.form);
+          this.fileList = res.data.video
+            ? [{ name: res.data.videoName, url: this.$store.state.configure.HOST + res.data.video }]
+            : [];
+          this.fileList1 = res.data.courseware
+            ? [{ name: res.data.coursewareName, url: this.$store.state.configure.HOST + res.data.courseware }]
+            : [];
+          console.log('File lists updated:', { fileList: this.fileList, fileList1: this.fileList1 });
+        } else {
+          this.$notify.error({
+            title: '错误',
+            message: res.message || '获取章节信息失败',
+          });
+        }
+      } catch (error) {
+        console.error('Fetch chapter error:', error);
+        this.$notify.error({
+          title: '错误',
+          message: '网络错误，请稍后重试',
+        });
+      } finally {
+        this.loading = false;
+      }
+    },
+    getApeTaskList() {
+      getApeTaskList().then(res => {
+        if (res.code == 1000) {
+          this.task = res.data;
+        } else {
+          this.$notify.error({
+            title: '错误',
+            message: res.message,
+          });
+        }
+      }).catch(error => {
+        this.$notify.error({
+          title: '错误',
+          message: '网络错误，请稍后重试',
+        });
+      });
+    },
+    getApeTaskByTeacherId() {
+      getApeTaskByTeacherId().then(res => {
+        if (res.code == 1000) {
+          this.task = res.data;
+        } else {
+          this.$notify.error({
+            title: '错误',
+            message: res.message,
+          });
+        }
+      }).catch(error => {
+        this.$notify.error({
+          title: '错误',
+          message: '网络错误，请稍后重试',
+        });
+      });
+    },
+    beforeVideoUpload(file) {
+      const allowedTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/wmv'];
+      const isValidType = allowedTypes.includes(file.type);
+      const isLt50M = file.size / 1024 / 1024 < 50;
+
+      if (!isValidType) {
+        this.$message.error('视频格式不支持，仅支持 MP4、AVI、MOV、WMV 格式！');
+        return false;
+      }
+      if (!isLt50M) {
+        this.$message.error('视频文件过大，最大支持 50MB！');
+        return false;
+      }
+      this.videoUploading = true;
+      this.uploadProgress = 0;
+      return true;
+    },
+    beforeCoursewareUpload(file) {
+      const allowedTypes = [
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ];
+      const isValidType = allowedTypes.includes(file.type);
+      const isLt20M = file.size / 1024 / 1024 < 20;
+
+      if (!isValidType) {
+        this.$message.error('课件格式不支持，仅支持 PPT、PPTX 格式！');
+        return false;
+      }
+      if (!isLt20M) {
+        this.$message.error('课件文件过大，最大支持 20MB！');
+        return false;
+      }
+      this.coursewareUploading = true;
+      this.uploadProgress = 0;
+      return true;
+    },
+    handleUploadProgress(event) {
+      this.uploadProgress = Math.min(100, Math.floor(event.percent));
+      if (this.uploadProgress === 100) {
+        setTimeout(() => {
+          this.videoUploading = false;
+          this.coursewareUploading = false;
+        }, 500);
+      }
+    },
+    handleAvatorSuccess(res) {
+      this.videoUploading = false;
+      if (res.code == 1000) {
+        this.$message.success('视频上传成功！');
+        this.fileList = [{ name: res.data, url: this.$store.state.configure.HOST + res.message }];
+        this.form.video = res.message;
+        this.form.videoName = res.data;
+        this.$refs.ruleForm.validateField('video');
+      } else {
+        this.$notify.error({
+          title: '上传失败',
+          message: res.message || '视频上传失败，请检查文件或网络！',
+        });
+        this.fileList = [];
+      }
+    },
+    handleRemove(file, fileList) {
+      this.form.video = '';
+      this.form.videoName = '';
+      this.fileList = [];
+      this.$refs.ruleForm.validateField('video');
+    },
+    handleFileSuccess(res) {
+      this.coursewareUploading = false;
+      if (res.code == 1000) {
+        this.$message.success('课件上传成功！');
+        this.fileList1 = [{ name: res.data, url: this.$store.state.configure.HOST + res.message }];
+        this.form.courseware = res.message;
+        this.form.coursewareName = res.data;
+      } else {
+        this.$notify.error({
+          title: '上传失败',
+          message: res.message || '课件上传失败，请检查文件或网络！',
+        });
+        this.fileList1 = [];
+      }
+    },
+    handleFileRemove(file, fileList) {
+      this.form.courseware = '';
+      this.form.coursewareName = '';
+      this.fileList1 = [];
+    },
+    handleExceed(files, fileList) {
+      this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+    },
+    async submit() {
+      this.$refs['ruleForm'].validate(async (valid) => {
+        if (valid) {
+          this.submitting = true;
+          try {
+            const res = await editApeChapter(this.form);
+            if (res.code == 1000) {
+              this.$notify.success({
+                title: '成功',
+                message: '保存成功',
+              });
+              this.handleClose();
             } else {
               this.$notify.error({
                 title: '错误',
-                message: res.message
+                message: res.message || '保存失败，请稍后重试',
               });
             }
-          })
-        }
-      },
-      updateVisible(newVal) {
-        if(newVal) {
-          if(this.taskId) {
-            this.form.taskId = this.taskId
+          } catch (error) {
+            this.$notify.error({
+              title: '错误',
+              message: '网络错误，请稍后重试',
+            });
+          } finally {
+            this.submitting = false;
           }
         }
-      }
-    }
- }
+      });
+    },
+    handleClose() {
+      this.resetForm();
+      this.$emit('updateFalse');
+    },
+    resetForm() {
+      this.form = {
+        id: '',
+        taskId: '',
+        taskName: '',
+        name: '',
+        videoName: '',
+        video: '',
+        coursewareName: '',
+        courseware: '',
+        remark: '',
+      };
+      this.fileList = [];
+      this.fileList1 = [];
+      this.videoUploading = false;
+      this.coursewareUploading = false;
+      this.uploadProgress = 0;
+      this.submitting = false;
+      this.$refs['ruleForm'].resetFields();
+    },
+  },
+};
 </script>
 
 <style scoped>
-  .el-col {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      margin-top: 12px
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Roboto:wght@400;500&display=swap');
+
+.el-dialog {
+  border-radius: 12px;
+  font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+}
+
+.custom-form {
+  padding: 20px;
+}
+
+.el-form-item__label {
+  font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #2d3748;
+  line-height: 36px;
+  letter-spacing: 0.5px;
+}
+
+.custom-input .el-input__inner,
+.custom-textarea .el-textarea__inner {
+  font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+  font-size: 14px;
+  color: #4a5568;
+  border-radius: 8px;
+  border-color: #cbd5e0;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
   }
-  .search-title {
-      font-family: '黑体';
-      float: right;
-      white-space: nowrap;
-      font-size: 14px;
-      width: 84px;
-      text-align: right;
+}
+
+.custom-textarea .el-textarea__inner {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.upload-button {
+  font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  color: #fff;
+  border: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
   }
-  .el-tree {
-      border: 1px solid #BDC1C9;
+}
+
+.submit-button {
+  font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, #34d399, #10b981);
+  color: #fff;
+  border: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+    background: linear-gradient(90deg, #10b981, #34d399);
   }
+}
+
+.cancel-button {
+  font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, #a0aec0, #718096);
+  color: #fff;
+  border: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(160, 174, 192, 0.3);
+    background: linear-gradient(90deg, #718096, #a0aec0);
+  }
+}
+
+.el-form-item {
+  margin-bottom: 25px;
+}
+
+.dialog-footer {
+  text-align: right;
+  padding: 10px 20px;
+}
+
+.el-upload__tip {
+  font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+  font-size: 12px;
+  color: #718096;
+  margin-top: 5px;
+}
+
+.file-preview {
+  margin-top: 10px;
+}
+
+.download-link {
+  font-family: 'Noto Sans SC', 'Roboto', sans-serif;
+  font-size: 14px;
+  color: #2563eb;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    color: #3b82f6;
+  }
+}
 </style>

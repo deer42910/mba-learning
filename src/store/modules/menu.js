@@ -64,6 +64,7 @@ const actions = {
     return new Promise(resolve => {
       //根据用户获取菜单权限
       getMenuByUser().then(res => {
+        console.log('getMenuByUser response..................:', res.data);
         if(res.code == 1000) {
           var data = res.data
           commit("setMenus",data)
@@ -120,22 +121,41 @@ function filterMenus(menus) {
       }
       menu.push(item)
     }
-  })
+  });
+  console.log('filterMenus result.........:', menu);
   return menu
 }
 
-function filterChildMenus(menu,menus) {
-  menu.child = []
+// function filterChildMenus(menu,menus) {
+//   menu.child = []
+//   menus.forEach(item => {
+//     if(menu.id == item.parentId) {
+//       if(item.menuType == 0 && item.visible == 0) {
+//         filterChildMenus(item,menus)
+//         menu.child.push(item)
+//       } else if(item.menuType == 1 && item.visible == 0) {
+//         menu.child.push(item)
+//       }
+//     }
+//   });
+//   console.log(`filterChildMenus for menu .............${menu.id}:`, menu.child);
+// }
+function filterChildMenus(menu, menus) {
+  menu.child = [];
+  console.log(`Processing children for menu: ${menu.id} (${menu.menuName}), menuType: ${menu.menuType}`);
   menus.forEach(item => {
-    if(menu.id == item.parentId) {
-      if(item.menuType == 0 && item.visible == 0) {
-        filterChildMenus(item,menus)
-        menu.child.push(item)
-      } else if(item.menuType == 1 && item.visible == 0) {
-        menu.child.push(item)
+    console.log(`Checking item: ${item.id} (${item.menuName}), parentId: ${item.parentId}, menuType: ${item.menuType}, visible: ${item.visible}`);
+    if (String(menu.id) === String(item.parentId)) {
+      console.log(`Found child: ${item.id} (${item.menuName}), menuType: ${item.menuType}, visible: ${item.visible}`);
+      if (item.menuType == 0 && item.visible == 0) {
+        filterChildMenus(item, menus);
+        menu.child.push(item);
+      } else if (item.menuType == 1 && item.visible == 0) {
+        menu.child.push(item);
       }
     }
-  })
+  });
+  console.log(`Children for ${menu.id}:`, JSON.stringify(menu.child, null, 2));
 }
 
 function filterRoutes(menus) {

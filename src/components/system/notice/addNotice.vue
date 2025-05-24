@@ -21,8 +21,8 @@
           <el-col :span="12">
             <el-form-item label="公告类型" prop="type">
               <el-select v-model="form.type" size="small" placeholder="请选择" style="width: 100%;">
-                <el-option label="公告" value="0"></el-option>
-                <el-option label="通知" value="1"></el-option>
+                <el-option label="公告" value="1"></el-option>
+                <el-option label="通知" value="0"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
@@ -39,11 +39,16 @@
 
           <!-- 轮播图 -->
           <el-col :span="24">
-            <el-form-item label="轮播图" prop="showInBanner">
+            <el-form-item label="轮播图" prop="flag">
               <div class="banner-switch-container">
-                <el-switch v-model="form.showInBanner"></el-switch>
+                <el-switch
+                  v-model="form.flag"
+                  :active-value="1"
+                  :inactive-value="0"
+                  @change="handleFlagChange"
+                ></el-switch>
                 <transition name="fade">
-                  <div v-if="form.showInBanner" class="banner-upload-container">
+                  <div v-if="form.flag" class="banner-upload-container">
                     <el-upload
                       class="banner-uploader"
                       :http-request="handleUpload"
@@ -104,7 +109,7 @@
 <script>
 import { mixin } from '../../../minix/index';
 import { saveAccount } from '../../../api/api';
-import { uploadFile } from '@/utils/upload'; // 引入封装的上传方法
+import { uploadFile } from '@/utils/upload';
 
 export default {
   mixins: [mixin],
@@ -152,9 +157,8 @@ export default {
         type: "0",
         state: "0",
         content: "",
-        showInBanner: false,
-        avatar: "", // 改为 avatar，与后端字段一致
-        flag: 0
+        flag: 0,
+        avatar: "",
       },
       rules: {
         title: [
@@ -164,14 +168,6 @@ export default {
     };
   },
   props: ['addNoticeVisible'],
-  watch: {
-    'form.showInBanner'(newVal) {
-      this.form.flag = newVal ? 1 : 0;
-      if (!newVal) {
-        this.form.avatar = ''; // 关闭轮播图时清空 avatar
-      }
-    }
-  },
   methods: {
     async handleUpload(options) {
       try {
@@ -206,10 +202,15 @@ export default {
         });
       }
     },
+    handleFlagChange(newVal) {
+      if (!newVal) {
+        this.form.avatar = '';
+      }
+    },
     submit() {
       this.$refs["ruleForm"].validate((valid) => {
         if (valid) {
-          if (this.form.showInBanner && !this.form.avatar) {
+          if (this.form.flag && !this.form.avatar) {
             this.$notify.error({
               title: '错误',
               message: '请上传轮播图！',
@@ -244,9 +245,8 @@ export default {
         type: "0",
         state: "0",
         content: "",
-        showInBanner: false,
+        flag: 0,
         avatar: "",
-        flag: 0
       };
       this.$emit("addNoticeFalse");
     },
@@ -287,22 +287,23 @@ export default {
 
 <style scoped>
 .custom-dialog ::v-deep .el-dialog {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .custom-dialog ::v-deep .el-dialog__header {
-  background-color: #f5f7fa;
-  border-bottom: 1px solid #e8ecef;
+  background: linear-gradient(135deg, #ffffff, #f9f9ff);
+  border-bottom: 1px solid #e9ecef;
   padding: 15px 20px;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 .custom-dialog ::v-deep .el-dialog__title {
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: #4A2B90;
 }
 
 .custom-dialog ::v-deep .el-dialog__body {
@@ -314,7 +315,7 @@ export default {
 }
 
 .el-form-item__label {
-  font-family: '黑体';
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   color: #606266;
 }
@@ -323,6 +324,18 @@ export default {
   display: flex;
   align-items: center;
   height: 32px;
+}
+
+.el-select,
+.el-input {
+  border-radius: 8px;
+}
+
+.el-select__input,
+.el-input__inner {
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  color: #555;
 }
 
 .banner-uploader .el-upload {
@@ -339,7 +352,8 @@ export default {
 }
 
 .banner-uploader .el-upload:hover {
-  border-color: #409EFF;
+  border-color: #a8e6cf;
+  background-color: #ecf5ff;
 }
 
 .banner-switch-container {
@@ -362,11 +376,11 @@ export default {
   background-color: #f5f7fa;
   border: 1px dashed #c0c4cc;
   border-radius: 6px;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
 }
 
 .upload-placeholder:hover {
-  border-color: #409EFF;
+  border-color: #a8e6cf;
   background-color: #ecf5ff;
 }
 
@@ -377,6 +391,7 @@ export default {
 }
 
 .upload-placeholder span {
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   color: #606266;
 }
@@ -432,16 +447,19 @@ export default {
 }
 
 .upload-tips {
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 12px;
   color: #909399;
   margin-top: 8px;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s, transform 0.3s;
 }
 
-.fade-enter, .fade-leave-to {
+.fade-enter,
+.fade-leave-to {
   opacity: 0;
   transform: translateY(-10px);
 }
@@ -454,6 +472,7 @@ export default {
 
 .custom-quill-editor ::v-deep .ql-editor {
   min-height: 150px !important;
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   color: #606266;
 }
@@ -461,10 +480,27 @@ export default {
 .dialog-footer {
   text-align: right;
   padding: 10px 20px;
-  border-top: 1px solid #e8ecef;
+  border-top: 1px solid #e9ecef;
 }
 
 .dialog-footer .el-button {
+  border-radius: 8px;
   padding: 8px 16px;
+  transition: all 0.3s ease;
+}
+
+.dialog-footer .el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.el-button--primary {
+  background: linear-gradient(90deg, #4A2B90, #6B46C1);
+  color: #fff;
+  border: none;
+}
+
+.el-button--primary:hover {
+  background: linear-gradient(90deg, #3d2376, #5b3aaa);
 }
 </style>

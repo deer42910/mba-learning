@@ -253,11 +253,29 @@ export const editApeClassification = (params) => post("/classification/editApeCl
 //删除ApeClassification
 export const removeApeClassification = (params) => get("/classification/removeApeClassification",params)
 
+//-------------------------------修改分类---------------------------------------
+//分页获取树形结构
+export const getCategoryPage = (params) => post("/category/getCategoryPage",params)
+//获取分类树形列表（用于下拉选择）
+export const getCategoryTree = () => get("/category/getCategoryTree")
+//根据id查询分类
+export const getCategoryById = (params) => get("/category/getCategoryById",params)
+//根据父类id查询分类
+export const getCategoryChildren = (params) => get("/category/getCategoryChildren",params)
+//保存分类
+export const saveCategory = (params) => post("/category/saveCategory",params)
+//更新分类
+export const editCategory = (params) => post("/category/editCategory",params)
+//删除
+export const removeCategory = (params) => get("/category/removeCategory",params)
+
 //-------------------------------章节---------------------------------------
 //查询章节
 export const getApeChapterPage = (params) => post("/chapter/getApeChapterPage",params)
 //根据id查询章节
 export const getApeChapterById = (params) => get("/chapter/getApeChapterById",params)
+//根据课程id查询章节
+export const getApeChapterByTaskId = (params) => get("/chapter/getApeChapterByTaskId",params)
 //保存章节
 export const saveApeChapter = (params) => post("/chapter/saveApeChapter",params)
 //更新章节
@@ -270,6 +288,8 @@ export const removeApeChapter = (params) => get("/chapter/removeApeChapter",para
 export const getApeHomeworkPage = (params) => post("/homework/getApeHomeworkPage",params)
 //根据id查询作业
 export const getApeHomeworkById = (params) => get("/homework/getApeHomeworkById",params)
+//根据章节id查询作业
+export const getApeHomeworkByChapterId = (params) => get("/homework/getApeHomeworkByChapterId",params)
 //保存作业
 export const saveApeHomework = (params) => post("/homework/saveApeHomework",params)
 //更新作业

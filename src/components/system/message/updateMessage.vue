@@ -1,128 +1,259 @@
 <template>
-<div>
-  <el-dialog title="编辑留言表" width="40%" :destroy-on-close="true" :visible.sync="updateVisible" :before-close="handleClose">
-    <el-form :model="form" :rules="rules" ref="ruleForm">
-      <el-row :gutter="10">
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <span class="search-title">
-                提问内容:
-                </span>
-            <div style="width:100%">
-                <el-form-item prop="content" style="margin-bottom:0">
-                    <el-input disabled="" type="textarea" v-model="form.content" size="mini" placeholder="请输入提问内容" autocomplete="off"></el-input>
-                </el-form-item>
-            </div>
-        </el-col>
-        <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <span class="search-title">
-                回复:
-                </span>
-            <div style="width:100%">
-                <el-form-item prop="answer" style="margin-bottom:0">
-                    <el-input type="textarea" v-model="form.answer" size="mini" placeholder="请输入回复内容" autocomplete="off"></el-input>
-                </el-form-item>
-            </div>
-        </el-col>
-      </el-row>
-    </el-form>
-    <div slot="footer" class="dialog-footer">
-      <el-button size="mini" type="primary" @click="submit">确 定</el-button>
-      <el-button size="mini" @click="handleClose">取 消</el-button>
-    </div>
-  </el-dialog>
-</div>
+  <div>
+    <el-dialog
+      title="编辑留言表"
+      width="40%"
+      :destroy-on-close="true"
+      :visible.sync="updateVisible"
+      :before-close="handleClose"
+      custom-class="custom-dialog"
+    >
+      <el-form :model="form" :rules="rules" ref="ruleForm" label-position="right" label-width="100px">
+        <el-row :gutter="20">
+          <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
+            <el-form-item label="提问内容:" prop="content">
+              <el-input
+                v-model="form.content"
+                size="small"
+                type="textarea"
+                :rows="4"
+                placeholder="请输入提问内容"
+                autocomplete="off"
+                disabled
+                :style="{ transition: 'all 0.3s ease' }"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
+            <el-form-item label="回复:" prop="answer">
+              <el-input
+                v-model="form.answer"
+                size="small"
+                type="textarea"
+                :rows="4"
+                placeholder="请输入回复内容"
+                autocomplete="off"
+                clearable
+                @input="handleInput"
+                :style="{ transition: 'all 0.3s ease' }"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button
+          size="small"
+          @click="handleClose"
+          :style="{ borderRadius: '8px', transition: 'all 0.3s ease' }"
+          @mouseover="style.cancelHover = true"
+          @mouseleave="style.cancelHover = false"
+        >
+          取消
+        </el-button>
+        <el-button
+          size="small"
+          type="primary"
+          :loading="loading"
+          @click="submit"
+          :style="{
+            background: 'linear-gradient(90deg, #4A2B90, #6B46C1)',
+            border: 'none',
+            borderRadius: '8px',
+            transition: 'all 0.3s ease',
+            color: '#fff',
+          }"
+          @mouseover="style.submitHover = true"
+          @mouseleave="style.submitHover = false"
+        >
+          确定
+        </el-button>
+      </div>
+    </el-dialog>
+  </div>
 </template>
 
 <script>
-  import {editApeMessage,getApeMessageById} from '../../../api/api'
-  export default {
-    data() {
-      return{
-        formLabelWidth: '80px',
-        form: {
-          userId: "",
-          userName: "",
-          content: "",
-          answer: "",
-        },
-        rules: {
-          answer: [
-            { required: true, message: '请输入回复内容', trigger: 'blur' },
-          ],
-        },
-      }
-    },
-    props: ['updateVisible','updateId'],
-    methods: {
-      submit() {
-        this.$refs["ruleForm"].validate((valid) => {
-          if (valid) {
-            editApeMessage(this.form).then(res => {
-              if(res.code == 1000) {
-                this.$notify.success({
-                  title: '成功',
-                  message: "保存成功"
-                });
-                this.handleClose();
-              } else {
-                this.$notify.error({
-                  title: '错误',
-                  message: res.message
-                });
-              }
-            })
-          } else {
-            return false;
-          }
-        });
+import { editApeMessage, getApeMessageById } from '../../../api/api'
+
+export default {
+  data() {
+    return {
+      form: {
+        id: '',
+        userId: '',
+        userName: '',
+        content: '',
+        answer: '',
       },
-      handleClose() {
-        this.$emit("updateFalse")
+      rules: {
+        answer: [
+          { required: true, message: '请输入回复内容', trigger: 'blur' },
+          { min: 1, max: 500, message: '回复长度在 1 到 500 个字符之间', trigger: 'blur' },
+        ],
       },
-     
-    },
-    created() {
-     
-    },
-    mounted() {
-      
-    },
-    watch: {
-      updateId(newVal) {
-        if(newVal) {
-          getApeMessageById({id:newVal}).then(res => {
-            if(res.code == 1000) {
-              this.form = res.data
+      loading: false,
+      style: {
+        submitHover: false,
+        cancelHover: false,
+      },
+    }
+  },
+  props: ['updateVisible', 'updateId'],
+  methods: {
+    submit() {
+      this.$refs['ruleForm'].validate((valid) => {
+        if (valid) {
+          this.loading = true
+          editApeMessage(this.form).then(res => {
+            this.loading = false
+            if (res.code === 1000) {
+              this.$notify.success({
+                title: '成功',
+                message: '保存成功',
+                duration: 2000,
+              })
+              this.handleClose()
             } else {
               this.$notify.error({
                 title: '错误',
-                message: res.message
-              });
+                message: res.message,
+                duration: 3000,
+              })
             }
+          }).catch(() => {
+            this.loading = false
+            this.$notify.error({
+              title: '错误',
+              message: '网络错误，请稍后重试',
+              duration: 3000,
+            })
+          })
+        } else {
+          return false
+        }
+      })
+    },
+    handleClose() {
+      this.$refs['ruleForm'].resetFields()
+      this.form = { id: '', userId: '', userName: '', content: '', answer: '' }
+      this.$emit('updateFalse')
+    },
+    handleInput() {
+      this.$refs['ruleForm'].validateField('answer')
+    },
+    fetchMessageData(id) {
+      getApeMessageById({ id }).then(res => {
+        if (res.code === 1000) {
+          this.form = { ...res.data }
+        } else {
+          this.$notify.error({
+            title: '错误',
+            message: res.message,
+            duration: 3000,
           })
         }
-        
+      }).catch(() => {
+        this.$notify.error({
+          title: '错误',
+          message: '网络错误，请稍后重试',
+          duration: 3000,
+        })
+      })
+    },
+  },
+  watch: {
+    updateId(newVal) {
+      if (newVal) {
+        this.fetchMessageData(newVal)
+      } else {
+        this.form = { id: '', userId: '', userName: '', content: '', answer: '' }
       }
-    }
- }
+    },
+  },
+}
 </script>
 
-<style   scoped>
-  .el-col {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      margin-top: 12px
-  }
-  .search-title {
-      font-family: '黑体';
-      float: right;
-      white-space: nowrap;
-      font-size: 14px;
-      width: 84px;
-      text-align: right;
-  }
-  .el-tree {
-      border: 1px solid #BDC1C9;
-  }
+<style scoped>
+.custom-dialog {
+  border-radius: 12px !important;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff, #f9f9ff);
+  box-shadow: 0 6px 20px rgba(74, 43, 144, 0.2);
+}
+
+.custom-dialog .el-dialog__header {
+  background: #F3F0FF !important;
+  border-bottom: 1px solid #e9ecef !important;
+  border-radius: 12px 12px 0 0;
+  padding: 15px 20px;
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: bold;
+  color: #4A2B90;
+}
+
+.custom-dialog .el-dialog__title {
+  font-size: 16px;
+}
+
+.custom-dialog .el-dialog__body {
+  padding: 20px 30px;
+}
+
+.el-form-item {
+  margin-bottom: 20px;
+}
+
+.el-form-item__label {
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  color: #4A2B90;
+  font-weight: 500;
+  text-align: right;
+}
+
+.el-input,
+.el-textarea {
+  transition: all 0.3s ease;
+}
+
+.el-input:hover,
+.el-textarea:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(74, 43, 144, 0.1);
+}
+
+.el-input .el-input__inner,
+.el-textarea .el-textarea__inner {
+  border-radius: 8px;
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  color: #555;
+}
+
+.dialog-footer {
+  text-align: right;
+  padding: 15px 20px;
+  border-top: 1px solid #e9ecef;
+  background: #fff;
+  border-radius: 0 0 12px 12px;
+}
+
+.el-button {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.el-button[type="primary"]:hover {
+  background: linear-gradient(90deg, #5C3BA6, #7D5AD8) !important;
+}
+
+.el-button:not([type="primary"]):hover {
+  background: #f1f3f5;
+}
 </style>

@@ -232,17 +232,28 @@
     created() {
       
     },
-    mounted() {
-      getIndexData({type:0}).then(res => {
-        if (res.code == 1000) {
-          this.top = res.data
-        }
-      })
-      getIndexSexData({type:0}).then(res => {
-        if (res.code == 1000) {
-          this.sex  =res.data
-          this.pieChart = echarts.init(document.getElementById("pie-chart"))
-          var optionPie = {
+    // mounted() {
+    //   getIndexData({type:0}).then(res => {
+    //     if (res.code == 1000) {
+    //       this.top = res.data
+    //     }
+    //   })
+    //   getIndexSexData({type:0}).then(res => {
+    //     if (res.code == 1000) {
+    //       this.sex  =res.data
+    //       this.pieChart = echarts.init(document.getElementById("pie-chart"))
+    //       var optionPie = {
+      mounted() {
+  getIndexData({type:0}).then(res => {
+    if (res.code == 1000) {
+      this.top = res.data
+    }
+  })
+  getIndexSexData({type:0}).then(res => {
+    if (res.code == 1000) {
+      this.sex  =res.data
+      this.pieChart = echarts.init(document.getElementById("pie-chart"))
+      var optionPie = {
             tooltip: {
               trigger: 'item'
             },
@@ -269,17 +280,36 @@
         }
       })
       getTaskChart({type:0}).then(res => {
-        if (res.code == 1000) {
-          this.tasks = res.data.tasks
-          this.nums = res.data.nums
-          this.myChart = echarts.init(document.getElementById("chart"))
-          var option = {
-              tooltip: {
-                trigger: 'axis'
-              },
-              legend: {
-                data: ['学生数量', '学生数量']
-              },
+    if (res.code == 1000) {
+      this.tasks = res.data.tasks
+      this.nums = res.data.nums
+    } else {
+      // 添加假数据
+      this.tasks = ['Java', 'Python', 'C++', 'JavaScript', 'Go', 'PHP']
+      this.nums = [120, 85, 65, 97, 78, 42]
+    }
+    
+    // 无论接口是否成功，都初始化图表
+    this.myChart = echarts.init(document.getElementById("chart"))
+    var option = {
+      tooltip: {
+        trigger: 'axis'
+      },
+      legend: {
+        data: ['学生数量', '学生数量']
+      },
+      // getTaskChart({type:0}).then(res => {
+      //   if (res.code == 1000) {
+      //     this.tasks = res.data.tasks
+      //     this.nums = res.data.nums
+      //     this.myChart = echarts.init(document.getElementById("chart"))
+      //     var option = {
+      //         tooltip: {
+      //           trigger: 'axis'
+      //         },
+      //         legend: {
+      //           data: ['学生数量', '学生数量']
+      //         },
               backgroundColor: '#fff',
               xAxis: [{
                   type: 'category',
@@ -359,8 +389,102 @@
             ]
           };
           this.myChart.setOption(option);
+  }).catch(() => {
+    // 请求失败时使用假数据
+    this.tasks = ['Java', 'Python', 'C++', 'JavaScript', 'Go', 'PHP']
+    this.nums = [120, 85, 65, 97, 78, 42]
+    
+    // 初始化图表
+    this.myChart = echarts.init(document.getElementById("chart"))
+    var option = {
+      tooltip: {
+        trigger: 'axis'
+      },
+      legend: {
+        data: ['学生数量', '学生数量']
+      },
+      backgroundColor: '#fff',
+      xAxis: [{
+        type: 'category',
+        color: '#59588D',
+        data: this.tasks,
+        axisLine: {
+          lineStyle: {
+            color: 'rgba(107,107,107,0.37)',
+          }
+        },
+        axisTick: {
+          show: true
+        },
+      }],
+      yAxis: [{
+        axisLine: {
+          lineStyle: {
+            color: 'rgba(107,107,107,0.37)',
+          }
+        },
+        axisTick: {
+          show: true
+        },
+        splitLine: {
+          lineStyle: {
+            color: 'rgba(131,101,101,0.2)',
+            type: 'dashed',
+          }
         }
-      })
+      }],
+      series: [{
+        data: this.nums,
+        type: 'line',
+        name: '折线图',
+        symbol: 'none',
+        areaStyle: {
+          color: "#E6F8EE"
+        },
+        lineStyle: {
+          color: '#3AC977',
+          width: 2,
+          shadowColor: 'rgba(0, 0, 0, 0.3)',//设置折线阴影
+          shadowBlur: 15,
+          shadowOffsetY: 20,
+        },
+        zlevel: 1
+      },{
+        type: 'bar',
+        data: this.nums,
+        barWidth: '15px',
+        name: '柱状图',
+        itemStyle: {
+          normal: {
+            color: function(params){//展示正值的柱子，负数设为透明
+              let colorArr = params.value > 0?['#7866BE', '#7866BE']:['rgba(0,0,0,0)', 'rgba(0,0,0,0)']
+              return new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                offset: 0,
+                color: colorArr[0] // 0% 处的颜色
+              }, {
+                offset: 1,
+                color:  colorArr[1]// 100% 处的颜色
+              }], false)
+            },
+            barBorderRadius: [30,30,0,0]
+          },
+        },
+        label: {
+          normal: {
+            show: true,
+            fontSize: 13,
+            color: '#333',
+            position: 'top',
+          }
+        },
+        zlevel: 2
+      }]
+    };
+    this.myChart.setOption(option);
+  })
+      //     this.myChart.setOption(option);
+      //   }
+      // })
       getTaskIndexList({type:0}).then(res => {
         if (res.code == 1000) {
           this.taskList = res.data.slice(0,5)

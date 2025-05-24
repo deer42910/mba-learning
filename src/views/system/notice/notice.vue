@@ -25,12 +25,20 @@
           <el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
             <span class="search-title">类型:</span>
             <el-select clearable style="margin-top:10px" size="mini" v-model="search.type" placeholder="请选择">
-              <el-option label="通知" value="0"></el-option>
-              <el-option label="公告" value="1"></el-option>
+              <el-option label="公告" value="0"></el-option>
+              <el-option label="通知" value="1"></el-option>
             </el-select>
           </el-col>
           <el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
-            <el-button style="margin-top:10px" size="mini" icon="el-icon-search" type="primary" @click="searchPage">查询</el-button>
+            <el-button
+              style="margin-top:10px;margin-left: 25px;"
+              size="mini"
+              icon="el-icon-search"
+              type="primary"
+              @click="searchPage"
+            >
+              查询
+            </el-button>
             <el-button style="margin-top:10px" size="mini" icon="el-icon-refresh" @click="refresh">重置</el-button>
           </el-col>
         </el-row>
@@ -38,30 +46,65 @@
 
       <!-- 表格区域 -->
       <div class="table">
-        <el-row style="padding-top:10px;margin-left:10px">
-          <el-button type="primary" size="mini" icon="el-icon-plus" plain @click="addNotice">新增</el-button>
-          <el-button type="success" :disabled="update.length != 1 ? true : false" size="mini" icon="el-icon-edit" plain @click="updateAccountBtn">修改</el-button>
-          <el-button type="danger" :disabled="update.length <= 0 ? true : false" size="mini" icon="el-icon-delete" plain @click="deleteDateBtn">删除</el-button>
+        <el-row style="padding: 15px 10px">
+          <el-button
+            type="primary"
+            size="mini"
+            icon="el-icon-plus"
+            plain
+            @click="addNotice"
+            :style="{ background: 'linear-gradient(90deg, #4A2B90, #6B46C1)', color: '#fff', border: 'none' }"
+          >
+            新增
+          </el-button>
+          <el-button
+            type="success"
+            :disabled="update.length != 1 ? true : false"
+            size="mini"
+            icon="el-icon-edit"
+            plain
+            @click="updateAccountBtn"
+            :style="{ background: 'linear-gradient(90deg, #34D399, #10B981)', color: '#fff', border: 'none' }"
+          >
+            修改
+          </el-button>
+          <el-button
+            type="danger"
+            :disabled="update.length <= 0 ? true : false"
+            size="mini"
+            icon="el-icon-delete"
+            plain
+            @click="deleteDateBtn"
+            :style="{ background: 'linear-gradient(90deg, #EF4444, #DC2626)', color: '#fff', border: 'none' }"
+          >
+            删除
+          </el-button>
         </el-row>
         <el-table
           v-loading="loading"
           :data="tableData"
           :header-cell-style="{
-            'color': '#4A2B90',
-            'background-color': '#ECE9F4',
+            background: 'linear-gradient(90deg, #ECE9F4, #F3F0FF)',
+            color: '#4A2B90',
+            fontWeight: 'bold',
           }"
           :row-style="{
-            'color': '#888897',
-            'font-size': '15px',
-            'font-family': '黑体',
-            'white-space': 'nowrap'
+            color: '#555',
+            fontSize: '14px',
+            fontFamily: 'PingFang SC, sans-serif',
+            transition: 'all 0.3s',
           }"
           @selection-change="handleSelectionChange"
           stripe
-          style="width: 100%"
+          style="width: 100%; border-radius: 8px; overflow: hidden"
+          :row-class-name="() => 'custom-row'"
         >
           <el-table-column type="selection" width="55"></el-table-column>
-          <el-table-column prop="title" label="公告标题" width="180"></el-table-column>
+          <el-table-column prop="title" label="公告标题" width="180">
+            <template slot-scope="scope">
+              <span class="text-ellipsis">{{ scope.row.title || '暂无标题' }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="type" label="公告类型" width="180">
             <template slot-scope="scope">
               <el-tag v-if="scope.row.type == 0">公告</el-tag>
@@ -83,10 +126,18 @@
                 size="mini"
                 :type="scope.row.flag == 0 ? 'warning' : 'info'"
                 @click="toggleCarousel(scope.row)"
+                :style="{ marginRight: '5px', transition: 'all 0.3s' }"
               >
                 {{ scope.row.flag == 0 ? '设置为轮播图' : '取消设置' }}
               </el-button>
-              <el-button size="mini" type="success" @click="updateAccount(scope.row.id)">修改</el-button>
+              <el-button
+                size="mini"
+                type="success"
+                @click="updateAccount(scope.row.id)"
+                :style="{ marginRight: '5px', transition: 'all 0.3s', background: 'linear-gradient(90deg, #34D399, #10B981)', color: '#fff', border: 'none' }"
+              >
+                修改
+              </el-button>
               <el-popconfirm
                 style="margin-left:5px"
                 confirm-button-text='确认'
@@ -96,7 +147,14 @@
                 title="确认删除选中的数据？"
                 @confirm="deleteDate(scope.row.id)"
               >
-                <el-button size="mini" slot="reference" type="danger">删除</el-button>
+                <el-button
+                  slot="reference"
+                  size="mini"
+                  type="danger"
+                  :style="{ transition: 'all 0.3s', background: 'linear-gradient(90deg, #EF4444, #DC2626)', color: '#fff', border: 'none' }"
+                >
+                  删除
+                </el-button>
               </el-popconfirm>
             </template>
           </el-table-column>
@@ -110,7 +168,8 @@
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
           :total="total"
-        ></el-pagination>
+          :style="{ marginTop: '15px', padding: '10px' }"
+        />
       </div>
 
       <!-- 轮播图卡片区域 -->
@@ -348,60 +407,129 @@ export default {
 </script>
 
 <style scoped>
+.notice {
+  padding: 10px;
+  background-color: #f7fafc;
+}
+
 .search-table {
   width: 100%;
 }
 
 .search {
-  background: #ffffff;
-  border-radius: 7px;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+  background: linear-gradient(135deg, #ffffff, #f9f9ff);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.search:hover {
+  box-shadow: 0 6px 20px rgba(74, 43, 144, 0.2);
 }
 
 .table {
-  background: #ffffff;
-  border-radius: 7px;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+  background: linear-gradient(135deg, #ffffff, #f9f9ff);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   margin-top: 10px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.table:hover {
+  box-shadow: 0 6px 20px rgba(74, 43, 144, 0.2);
 }
 
 .carousel-card {
-  background: #ffffff;
-  border-radius: 7px;
-  box-shadow: 0 2px 12px 0 rgba(0,0,0,.1);
+  background: linear-gradient(135deg, #ffffff, #f9f9ff);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   margin-top: 10px;
   padding: 10px;
+  transition: all 0.3s ease;
 }
-.el-cardd{
-    padding-bottom: 20px !important;
+
+.carousel-card:hover {
+  box-shadow: 0 6px 20px rgba(74, 43, 144, 0.2);
+}
+
+.el-cardd {
+  border-radius: 12px;
+  padding-bottom: 20px !important;
+  background: transparent;
 }
 
 .el-col {
   display: flex;
-  flex-direction: row;
   align-items: center;
+  margin-bottom: 10px;
 }
 
 .search-title {
-  font-family: '黑体';
-  float: right;
-  white-space: nowrap;
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
-  margin-top: 10px;
-  width: 63px;
+  font-weight: 500;
+  color: #4A2B90;
+  white-space: nowrap;
+  width: 80px;
   text-align: right;
+  margin-right: 10px;
+}
+
+.el-input,
+.el-select {
+  flex: 1;
+}
+
+.el-input__inner,
+.el-select__input {
+  border-radius: 8px;
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  color: #555;
+}
+
+.el-button {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .el-table {
-  padding: 10px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.el-dialog__header {
-  border-bottom: 1px solid #F4F8F9 !important;
+.el-table .custom-row:hover {
+  background-color: #f9f9ff !important;
+  transform: scale(1.01);
+}
+
+.el-tag {
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.el-pagination {
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .el-dialog {
-  border-radius: 10px !important;
+  border-radius: 12px !important;
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid #e9ecef !important;
+  border-radius: 12px 12px 0 0;
 }
 
 .carousel-images {
@@ -425,6 +553,7 @@ export default {
 }
 
 .image-title {
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 12px;
   color: #606266;
   text-align: center;
@@ -468,10 +597,19 @@ export default {
 }
 
 .empty-text {
+  font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   color: #909399;
   text-align: center;
   padding: 20px;
   width: 100%;
+}
+
+.text-ellipsis {
+  display: block;
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.5;
+  color: #555;
 }
 </style>
